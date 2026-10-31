@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kompyuter savodxonligi — bilim testi</title>
+<style>
+:root{--bg:#f3f5fa;--card:#fff;--tx:#1d2433;--mut:#667085;--pri:#3b5bdb;--ok:#2b9348;--bad:#d62839;--line:#e3e7f0}
+@media (prefers-color-scheme:dark){:root{--bg:#12151d;--card:#1c212d;--tx:#eef1f8;--mut:#9aa4b8;--pri:#7b93ff;--ok:#4cc26a;--bad:#ff6b78;--line:#2c3446}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",Arial,sans-serif;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:20px 14px 50px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+h1{margin:0 0 6px;font-size:26px}h2{margin:0 0 14px;font-size:21px;line-height:1.4}
+p{margin:6px 0;color:var(--mut)}
+input[type=text]{width:100%;padding:13px 14px;font-size:18px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--tx);outline:none}
+input[type=text]:focus{border-color:var(--pri)}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:12px 22px;background:var(--pri);color:#fff;font-weight:600}
+button.sec{background:transparent;color:var(--pri);border:2px solid var(--pri)}
+button:disabled{opacity:.4;cursor:default}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--mut);margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.bar{height:8px;background:var(--line);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;background:var(--pri);transition:width .25s}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--bg);color:var(--pri);border:1px solid var(--line);margin-bottom:10px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:13px 16px;background:var(--bg);color:var(--tx);border:2px solid var(--line);font-weight:500}
+.opt.sel{border-color:var(--pri);background:color-mix(in srgb,var(--pri) 14%,var(--bg))}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
+.dots{display:flex;flex-wrap:wrap;gap:5px;margin-top:18px}
+.dots b{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:12px;cursor:pointer;background:var(--bg);border:1px solid var(--line);color:var(--mut)}
+.dots b.done{background:color-mix(in srgb,var(--pri) 22%,var(--bg));color:var(--tx)}
+.dots b.cur{outline:2px solid var(--pri)}
+.score{text-align:center;padding:10px 0 18px}
+.big{font-size:64px;font-weight:800;color:var(--pri);line-height:1}
+.stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.stats div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 18px}
+.rv{border-top:1px solid var(--line);padding:12px 0;font-size:15px}
+.rv .y{color:var(--ok);font-weight:700}.rv .n{color:var(--bad);font-weight:700}
+.hide{display:none}
+@media print{.noprint{display:none}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="start" class="card">
+  <h1>💻 Kompyuter savodxonligi testi</h1>
+  <p>70 ta savol (14 ta mavzudan 5 tadan): <b>50 ta ochiq</b> (variantdan tanlaysiz) va <b>20 ta yopiq</b> (javobni oʻzingiz yozasiz).</p>
+  <p>Yozma savollarda javobni qisqa yozing (1–3 soʻz, qisqartma). Katta-kichik harf farq qilmaydi. Savollar orasida oldinga-orqaga oʻtish mumkin.</p>
+  <p style="margin-top:18px"><b>Ism va familiyangiz:</b></p>
+  <input type="text" id="name" placeholder="Masalan: Aliyev Vali" autocomplete="off">
+  <div class="nav" style="justify-content:flex-start"><button id="go">Testni boshlash →</button></div>
+</div>
+
+<div id="quiz" class="card hide">
+  <div class="top"><span id="who"></span><span id="cnt"></span><span id="time">⏱ 00:00</span></div>
+  <div class="bar"><i id="pb"></i></div>
+  <div id="qbox"></div>
+  <div class="nav">
+    <button class="sec" id="prev">← Oldingi</button>
+    <button id="next">Keyingi →</button>
+  </div>
+  <div class="dots" id="dots"></div>
+</div>
+
+<div id="res" class="card hide"></div>
+</div>
+
+<script>
+"use strict";
+// ===== SAVOLLAR =====
+// OCHIQ = variantli (50 ta). Format: [mavzu, savol, TOGʻRI javob, xato1, xato2, xato3] — variantlar tartibi har safar aralashadi
+const OPEN=[
+[1,"Kompyuterda barcha hisob-kitoblarni bajaradigan asosiy qurilma qaysi?","Protsessor","Monitor","Sichqoncha","Printer"],
+[1,"Kompyuter oʻchirilganda ham fayllar saqlanib qoladigan qurilma qaysi?","Qattiq disk (HDD/SSD)","Operativ xotira (RAM)","Klaviatura","Monitor"],
+[1,"Kompyuterning barcha qismlari oʻrnatiladigan va bir-biriga ulanadigan asosiy plata nima deyiladi?","Ona plata (Motherboard)","Videokarta","Quvvat bloki","Klaviatura"],
+[2,"Operatsion tizimning asosiy vazifasi nima?","Kompyuter qurilmalari va dasturlarini boshqarish","Internet tezligini oshirish","Faqat matn yozish","Rasm chizish"],
+[2,"Quyidagilardan qaysi biri operatsion tizim EMAS?","Photoshop","Windows","Linux","macOS"],
+[2,"Windows ekranining pastki qismidagi, Start tugmasi joylashgan panel nima deyiladi?","Vazifalar paneli (Taskbar)","Fayl boshqargich","Brauzer","Antivirus"],
+[2,"Oʻchirilgan fayllar dastlab qayerga tushadi?","Savat (Recycle Bin)","Yuklab olinganlar","Bu kompyuter","Ish stoli"],
+[3,"1 bayt necha bitga teng?","8","2","10","16"],
+[3,"Windowsda yangi papka yaratish uchun sichqonchaning oʻng tugmasi bosilgach qaysi buyruq tanlanadi?","Yangi (New) → Papka (Folder)","Oʻchirish (Delete)","Xossalar (Properties)","Qayta nomlash (Rename)"],
+[3,"Nusxa olingan faylni boshqa joyga qoʻyish (Paste) uchun tez tugmalar qaysi?","Ctrl + V","Ctrl + C","Ctrl + X","Ctrl + A"],
+[4,"Kompyuterga matn kiritish uchun asosiy qurilma qaysi?","Klaviatura","Monitor","Kolonka","Printer"],
+[4,"Quyidagilardan qaysi biri chiqarish qurilmasi?","Printer","Sichqoncha","Klaviatura","Mikrofon"],
+[4,"Kompyuterda tovushni eshitish uchun qaysi qurilma ishlatiladi?","Kolonka (dinamik)","Mikrofon","Skaner","Veb-kamera"],
+[4,"Flesh-xotira (USB) nima uchun ishlatiladi?","Fayllarni bir kompyuterdan boshqasiga olib oʻtish uchun","Internetga ulanish uchun","Rasm chop etish uchun","Tovush yozish uchun"],
+[5,"Quyidagilardan qaysi biri brauzer?","Google Chrome","Microsoft Word","Telegram","Excel"],
+[5,"Elektron pochta manzili qaysi koʻrinishda toʻgʻri yozilgan?","ali@gmail.com","ali.gmail.com","ali@@gmail","@ali gmail com"],
+[5,"Brauzerda saytga kirish uchun sayt manzili qayerga yoziladi?","Manzil qatoriga (Address bar)","Oynani yopish tugmasiga","Yorliq (tab) nomiga","Pastki vazifalar paneliga"],
+[6,"Antivirus dasturi nima uchun kerak?","Kompyuterni zararli dasturlardan himoya qilish uchun","Internetni tezlashtirish uchun","Rasm chizish uchun","Xotirani kattalashtirish uchun"],
+[6,"Quyidagilardan qaysi biri antivirus dasturi?","Kaspersky","Google Chrome","Microsoft Word","Telegram"],
+[6,"Kompyuterga virus tushishining eng keng tarqalgan yoʻli qaysi?","Notanish fayl va havolalarni ochish","Klaviaturada yozish","Monitorni tozalash","Ekran yorugʻligini oshirish"],
+[7,"Klaviaturada katta harf yozish uchun qaysi tugma bosib turiladi?","Shift","Tab","Esc","Delete"],
+[7,"Oʻn barmoq usulida yozishda boshlangʻich qatordagi chap qoʻl barmoqlari qaysi harflar ustida turadi?","A S D F","Q W E R","Z X C V","1 2 3 4"],
+[7,"Yangi qatorga oʻtish yoki buyruqni tasdiqlash uchun qaysi tugma bosiladi?","Enter","Esc","Shift","Alt"],
+[7,"Kursor oldidagi (chapdagi) harfni oʻchirish uchun qaysi tugma ishlatiladi?","Backspace","Enter","Tab","Esc"],
+[8,"Raqamli savodxonlik nima?","Raqamli texnologiyalardan toʻgʻri va xavfsiz foydalana olish koʻnikmasi","Faqat dasturlash bilish","Kompyuter yasash mahorati","Internetsiz ishlash usuli"],
+[8,"Quyidagilardan qaysi biri raqamli madaniyatga mos?","Internetda boshqalarni hurmat qilib muloqot qilish","Boshqa odamning parolidan foydalanish","Yolgʻon xabarlarni tarqatish","Haqoratli izoh yozish"],
+[8,"Parol va bank karta raqami kabi shaxsiy maʼlumotlarni kimga berish mumkin?","Hech kimga — ular maxfiy saqlanadi","Notanish saytlarga","Ijtimoiy tarmoqdagi tanishmaganlarga","Hamma koʻrishi uchun e’lon qilinadi"],
+[8,"Internetdagi maʼlumotning ishonchliligini tekshirishning eng toʻgʻri usuli qaysi?","Bir nechta ishonchli manbada solishtirib koʻrish","Birinchi chiqqaniga ishonish","Koʻp “like” olganiga ishonish","Doʻst yuborgani uchun ishonish"],
+[9,"Raqamli transformatsiya nima?","Faoliyatni raqamli texnologiyalar asosida oʻzgartirish va soddalashtirish","Eski kompyuterlarni sotish","Qogʻoz hujjatlarni koʻpaytirish","Internetni oʻchirib qoʻyish"],
+[9,"Oʻzbekistonda davlat xizmatlarini onlayn koʻrsatadigan portal qaysi?","my.gov.uz","kun.uz","olx.uz","daryo.uz"],
+[9,"Quyidagilardan qaysi biri raqamli transformatsiyaga misol?","Maktab jurnalining elektron (onlayn) shaklga oʻtishi","Kitobni qoʻlda koʻchirib yozish","Xatni pochta orqali yuborish","Qogʻoz chek yozish"],
+[9,"Telefon orqali naqd pulsiz toʻlov qilish uchun qaysi ilovalar ishlatiladi?","Click va Payme","Word va Excel","Chrome va Opera","Paint va Notepad"],
+[10,"IP-manzil nima?","Tarmoqdagi qurilmaning noyob manzili","Saytning dizayni","Antivirus nomi","Parol turi"],
+[10,"DNS tizimining vazifasi nima?","Domen nomini IP-manzilga aylantirish","Fayllarni arxivlash","Virusni topish","Rasmni tahrirlash"],
+[10,"Sayt manzilidagi HTTPS dagi “S” harfi nimani bildiradi?","Secure — xavfsiz aloqa","Speed — tezlik","Server — server nomi","Site — sayt"],
+[11,"Quyidagilardan qaysi biri bulutli fayl saqlash xizmati?","Google Drive","Paint","Notepad","Calculator"],
+[11,"Google Docs ning asosiy afzalligi nima?","Bir nechta kishi bir hujjat ustida bir vaqtda ishlay oladi","Faqat rasm chizadi","Virusni oʻchiradi","Kompyuterni tezlashtiradi"],
+[11,"Onlayn uchrashuv (video qoʻngʻiroq) oʻtkazish uchun qaysi dastur mos?","Zoom","Paint","Calculator","Notepad"],
+[11,"Bulutli xizmatda saqlangan fayllarga qanday kirish mumkin?","Internet orqali istalgan qurilmadan","Faqat bitta kompyuterdan","Faqat flesh-xotira orqali","Faqat printer orqali"],
+[12,"Git nima?","Kod versiyalarini boshqarish tizimi","Brauzer","Antivirus dasturi","Operatsion tizim"],
+[12,"GitHub nima uchun ishlatiladi?","Kodni onlayn saqlash va hamkorlikda ishlash uchun","Video montaj qilish uchun","Musiqa tinglash uchun","Hujjat chop etish uchun"],
+[12,"Git’da yangi loyihani boshlash (repozitoriy yaratish) buyrugʻi qaysi?","git init","git run","git open","git start"],
+[12,"Git’da loyiha fayllari va oʻzgarishlar tarixi saqlanadigan “ombor” nima deyiladi?","Repozitoriy (repository)","Brauzer","Domen","Hosting"],
+[13,"Android va iOS uchun ilovalar yaratish IT yoʻnalishi qaysi?","Mobile dasturlash","Data Science","Cybersecurity","DevOps"],
+[13,"Katta maʼlumotlarni tahlil qilib xulosa chiqarish yoʻnalishi qaysi?","Data Science","Web dasturlash","Mobile dasturlash","Kompyuter taʼmiri"],
+[13,"Saytning foydalanuvchi koʻradigan tashqi qismi (dizayni) bilan ishlaydigan dasturchi kim?","Frontend dasturchi","Backend dasturchi","Tarmoq muhandisi","Kiberxavfsizlik mutaxassisi"],
+[13,"Axborot va tarmoq xavfsizligini taʼminlovchi IT yoʻnalishi qaysi?","Cybersecurity","Web dasturlash","Mobile dasturlash","Data Science"],
+[14,"Quyidagi parollardan qaysi biri eng xavfsiz?","T7#kP9!mQ2z","12345678","qwerty","Ali2000"],
+[14,"Notanish havolaga kirib, shaxsiy maʼlumotlarni kiritish nimaga olib kelishi mumkin?","Maʼlumotlarning oʻgʻirlanishiga","Internet tezlashishiga","Xotira oshishiga","Ekran yorugʻlashishiga"],
+[14,"Ikki bosqichli tasdiqlash (2FA) nima beradi?","Akkaunt xavfsizligini oshiradi","Internetni tezlashtiradi","Fayllarni arxivlaydi","Reklamani oʻchiradi"]
+];
+// YOPIQ = yozma (20 ta). a: qabul qilinadigan javoblar (3 belgigacha qisqalari faqat butun soʻz sifatida), s: toʻgʻri javob
+const CLOSED=[
+{t:1,q:"Kompyuterning vaqtinchalik (operativ) xotirasi qisqartmasi qanday?",a:["ram","operativ xotira","tezkor xotira"],s:"RAM (operativ xotira)"},
+{t:1,q:"Qattiq diskdan ancha tez ishlaydigan, harakatlanuvchi qismi yoʻq zamonaviy xotira turi qisqartmasi:",a:["ssd","solid state"],s:"SSD"},
+{t:2,q:"Windows operatsion tizimini qaysi kompaniya ishlab chiqargan?",a:["microsoft","maykrosoft","mikrosoft"],s:"Microsoft"},
+{t:3,q:"Axborotning eng kichik oʻlchov birligi nima?",a:["bit"],s:"Bit"},
+{t:3,q:"Belgilangan fayl yoki matndan nusxa olish (Copy) uchun tez tugmalar:",a:["ctrl c","control c"],s:"Ctrl + C"},
+{t:4,q:"Qogʻoz hujjatni kompyuterga rasm/fayl koʻrinishida oʻtkazuvchi qurilma nomi:",a:["skaner","scanner","skanner"],s:"Skaner"},
+{t:5,q:"Elektron pochta manzilida foydalanuvchi nomi va sayt nomini ajratib turuvchi belgi:",a:["@","kuchuk","et belgisi"],s:"@ (“kuchuk” belgisi)"},
+{t:5,q:"Google va Yandex kabi, internetdan axborot topib beradigan tizim qanday ataladi?",a:["qidiruv","search engine","poisk"],s:"Qidiruv tizimi"},
+{t:6,q:"Oʻzini koʻpaytirib, fayllarga zarar yetkazuvchi zararli dastur turi nima?",a:["virus","kompyuter virusi"],s:"Virus"},
+{t:6,q:"Windowsning oʻrnatilgan (ichidagi) antivirusi nomi nima?",a:["defender"],s:"Windows Defender"},
+{t:7,q:"Klaviaturada tugmalarga qaramasdan, barcha barmoqlar bilan yozish usuli qanday ataladi?",a:["barmoq","koʻr","ko'r","touch","blind"],s:"Oʻn barmoq (koʻr) usuli"},
+{t:8,q:"Internetda tarqatiladigan yolgʻon yoki soxta xabarlar odatda qanday ataladi? (inglizcha yoki oʻzbekcha)",a:["fake","feyk","fayk","soxta xabar"],s:"Fake (feyk) xabar"},
+{t:9,q:"Qogʻoz hujjatlar oʻrniga kompyuterda yaratiladigan va saqlanadigan hujjat qanday hujjat deyiladi?",a:["elektron","raqamli"],s:"Elektron hujjat"},
+{t:10,q:"Sayt fayllari saqlanadigan va internetda doim ishlab turadigan serverdagi joy/xizmat nomi:",a:["hosting","xosting"],s:"Hosting"},
+{t:10,q:"Saytning internetdagi nomi (masalan, google.com) nima deb ataladi?",a:["domen","domain"],s:"Domen"},
+{t:11,q:"Internet orqali ishlaydigan “bulutli” xizmatlar inglizcha qanday ataladi? (… xizmatlar)",a:["cloud","klaud"],s:"Cloud"},
+{t:12,q:"Git’da oʻzgarishlarni “suratga olib” saqlab qoʻyish buyrugʻi nima? (git ...)",a:["commit","kommit"],s:"commit"},
+{t:13,q:"AI qisqartmasi oʻzbekcha qanday ochiladi?",a:["sun'iy intellekt","suniy intellekt","sun'iy aql","artificial intelligence"],s:"Sunʼiy intellekt"},
+{t:14,q:"Soxta sayt yoki xabar orqali parol va karta maʼlumotlarini oʻgʻirlash hujumi qanday ataladi?",a:["fishing","phishing","fisshing","fiching"],s:"Fishing (phishing)"},
+{t:14,q:"Maʼlumot yoʻqolib qolmasligi uchun fayllarning qoʻshimcha nusxasini saqlash jarayoni nima deyiladi?",a:["zaxira","backup","bekap","bekup"],s:"Zaxira nusxa (backup)"}
+];
+const TOTAL=OPEN.length+CLOSED.length;
+const Q=[...OPEN.map(x=>({t:x[0],q:x[1],o:x.slice(2),c:0,type:"closed",ord:shuffle([0,1,2,3])})),...CLOSED.map(x=>({...x,type:"open"}))];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// ===== TEKSHIRISH =====
+function norm(s){return String(s).toLowerCase().replace(/[ʻʼ‘’`´]/g,"'").replace(/[^a-z0-9@'\u0400-\u04ff]+/g," ").trim()}
+function isRight(q,ans){
+  if(ans==null||ans==="")return false;
+  if(q.type==="closed")return ans===q.c;
+  const n=norm(ans), c=n.replace(/ /g,"");
+  if(!n)return false;
+  const raw=String(ans).toLowerCase();
+  return q.a.some(a=>{
+    if(a==="@")return raw.includes("@")||(" "+n+" ").includes(" kuchuk ");
+    const na=norm(a), ca=na.replace(/ /g,"");
+    if(na.length<=3)return(" "+n+" ").includes(" "+na+" ");
+    return n.includes(na)||c.includes(ca);
+  });
+}
+
+// ===== HOLAT =====
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let cur=0,ans=new Array(TOTAL).fill(null),user="",t0=0,timer=null;
+
+$("go").onclick=start;
+$("name").addEventListener("keydown",e=>{if(e.key==="Enter")start()});
+function start(){
+  user=$("name").value.trim();
+  if(user.length<2){$("name").focus();$("name").style.borderColor="var(--bad)";return}
+  $("start").classList.add("hide");$("quiz").classList.remove("hide");
+  $("who").textContent="👤 "+user;
+  t0=Date.now();timer=setInterval(tick,1000);tick();render();
+}
+function tick(){const s=Math.floor((Date.now()-t0)/1000);$("time").textContent="⏱ "+String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+
+function render(){
+  const q=Q[cur];
+  $("cnt").textContent="Savol "+(cur+1)+" / "+TOTAL;
+  $("pb").style.width=((cur+1)/TOTAL*100)+"%";
+  let h='<span class="tag">'+(q.type==="open"?"Yopiq savol (yozma)":"Ochiq savol (variantli)")+" • Mavzu "+q.t+'</span><h2>'+esc(q.q)+"</h2>";
+  if(q.type==="open"){
+    h+='<input type="text" id="inp" placeholder="Javobingizni yozing..." autocomplete="off" spellcheck="false" value="'+esc(ans[cur]||"")+'">';
+  }else{
+    q.ord.forEach((oi,k)=>{h+='<button class="opt'+(ans[cur]===oi?" sel":"")+'" data-o="'+oi+'">'+"ABCD"[k]+") "+esc(q.o[oi])+"</button>"});
+  }
+  $("qbox").innerHTML=h;
+  if(q.type==="open"){
+    const inp=$("inp");inp.focus();
+    inp.oninput=()=>{ans[cur]=inp.value.trim()||null;dots()};
+    inp.onkeydown=e=>{if(e.key==="Enter")next()};
+  }else{
+    document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{ans[cur]=+b.dataset.o;render()});
+  }
+  $("prev").disabled=cur===0;
+  $("next").textContent=cur===TOTAL-1?"✔ Yakunlash":"Keyingi →";
+  dots();
+}
+function dots(){
+  $("dots").innerHTML=Q.map((_,i)=>'<b class="'+(ans[i]!=null?"done ":"")+(i===cur?"cur":"")+'" data-i="'+i+'">'+(i+1)+"</b>").join("");
+  document.querySelectorAll("#dots b").forEach(b=>b.onclick=()=>{cur=+b.dataset.i;render()});
+}
+$("prev").onclick=()=>{if(cur>0){cur--;render()}};
+$("next").onclick=next;
+function next(){
+  if(cur<TOTAL-1){cur++;render();return}
+  const left=ans.filter(a=>a==null).length;
+  if(left&&!confirm("Hali "+left+" ta savolga javob bermadingiz. Baribir yakunlaysizmi?"))return;
+  finish();
+}
+
+// ===== NATIJA =====
+function finish(){
+  clearInterval(timer);
+  const secs=Math.floor((Date.now()-t0)/1000);
+  const ok=Q.map((q,i)=>isRight(q,ans[i]));
+  const total=ok.filter(Boolean).length;
+  const openOk=ok.slice(0,OPEN.length).filter(Boolean).length;
+  const closedOk=ok.slice(OPEN.length).filter(Boolean).length;
+  const pct=Math.round(total/TOTAL*100);
+  const grade=pct>=86?"A’lo 🏆":pct>=71?"Yaxshi 👍":pct>=56?"Qoniqarli 🙂":"Mavzularni takrorlash kerak 📚";
+  let h='<div class="score"><p>'+esc(user)+'</p><div class="big">'+total+' / '+TOTAL+'</div><h2 style="margin-top:10px">'+pct+'% — '+grade+'</h2></div>';
+  h+='<div class="stats"><div>Ochiq: <b>'+openOk+' / '+OPEN.length+'</b></div><div>Yopiq: <b>'+closedOk+' / '+CLOSED.length+'</b></div><div>Vaqt: <b>'+Math.floor(secs/60)+' daq '+secs%60+' son</b></div></div>';
+  h+='<div class="nav noprint" style="justify-content:center"><button class="sec" id="tg">Javoblarni koʻrish</button><button class="sec" onclick="window.print()">🖨 Chop etish</button><button onclick="location.reload()">Qaytadan</button></div>';
+  h+='<div id="rv" class="hide" style="margin-top:20px">';
+  Q.forEach((q,i)=>{
+    const right=q.type==="open"?q.s:q.o[q.c];
+    const mine=ans[i]==null?"— javob berilmagan —":(q.type==="open"?ans[i]:q.o[ans[i]]);
+    h+='<div class="rv"><b>'+(i+1)+'.</b> '+esc(q.q)+'<br><span class="'+(ok[i]?"y":"n")+'">'+(ok[i]?"✔ Toʻgʻri":"✘ Xato")+'</span> — sizning javobingiz: <i>'+esc(mine)+'</i>'+(ok[i]?"":'<br>Toʻgʻri javob: <b>'+esc(right)+'</b>')+'</div>';
+  });
+  h+="</div>";
+  $("quiz").classList.add("hide");$("res").classList.remove("hide");$("res").innerHTML=h;
+  $("tg").onclick=()=>$("rv").classList.toggle("hide");
+}
+</script>
+</body>
+</html>
